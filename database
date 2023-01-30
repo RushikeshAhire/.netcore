@@ -1,0 +1,446 @@
+﻿using Microsoft.Data.SqlClient;
+using System.Data;
+
+namespace Databases
+{
+    internal class Program
+    {
+        static void Main()
+        {
+            //Connect();
+            Employee obj = new Employee { EmpNo = 7, Name = "Kevin D'Silva", Basic = 12345, DeptNo = 30 };
+
+            //Insert();
+            //Insert(obj);
+            //InsertWithParameters(obj);
+            //nsertWithStoredProc(obj);
+            //GetSingleValue();
+            //DataReader1();
+            //DataReader2();
+            //MARS();
+            //CallFuncReturningSqlDataReader();
+            //Transactions();
+            AsyncCommand2();
+        }
+
+        static void Connect()
+        {
+            SqlConnection cn = new SqlConnection();
+            //Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=YCPJan23;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=YCPJan23;Integrated Security=True;";
+            //cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=YCPJan23;User Id=sa;Password=pwd";
+            try
+            {
+                cn.Open();
+                Console.WriteLine("success");
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine(ex.Message);
+            }
+            finally { cn.Close(); } 
+            
+
+        }
+        static void Insert()
+        {
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=YCPJan23;Integrated Security=True;";
+            try
+            {
+                cn.Open();
+                SqlCommand cmdInsert = new SqlCommand();
+                cmdInsert.Connection = cn;
+                cmdInsert.CommandType = System.Data.CommandType.Text;
+                cmdInsert.CommandText = "insert into Employees values(4,'D',12345, 10)";
+
+                cmdInsert.ExecuteNonQuery();
+
+                Console.WriteLine("success");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally { cn.Close(); }
+
+
+        }
+        static void Insert(Employee obj)
+        {
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=YCPJan23;Integrated Security=True;";
+            try
+            {
+                cn.Open();
+                SqlCommand cmdInsert = new SqlCommand();
+                cmdInsert.Connection = cn;
+                cmdInsert.CommandType = System.Data.CommandType.Text;
+                cmdInsert.CommandText = $"insert into Employees values({obj.EmpNo},'{obj.Name}',{obj.Basic}, {obj.DeptNo})";
+                Console.WriteLine(cmdInsert.CommandText);
+                cmdInsert.ExecuteNonQuery();
+
+                Console.WriteLine("success");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally { cn.Close(); }
+
+
+        }
+        static void InsertWithParameters(Employee obj)
+        {
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=YCPJan23;Integrated Security=True;";
+            try
+            {
+                cn.Open();
+                SqlCommand cmdInsert = new SqlCommand();
+                cmdInsert.Connection = cn;
+                cmdInsert.CommandType = System.Data.CommandType.Text;
+                cmdInsert.CommandText = "insert into Employees values(@EmpNo,@Name,@Basic,@DeptNo)";
+
+                cmdInsert.Parameters.AddWithValue("@EmpNo", obj.EmpNo);
+                cmdInsert.Parameters.AddWithValue("@Name", obj.Name);
+                cmdInsert.Parameters.AddWithValue("@Basic", obj.Basic);
+                cmdInsert.Parameters.AddWithValue("@DeptNo", obj.DeptNo);
+
+                cmdInsert.ExecuteNonQuery();
+
+                Console.WriteLine("success");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally { cn.Close(); }
+        }
+
+        static void InsertWithStoredProc(Employee obj)
+        {
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=YCPJan23;Integrated Security=True;";
+            try
+            {
+                cn.Open();
+                SqlCommand cmdInsert = new SqlCommand();
+                cmdInsert.Connection = cn;
+                cmdInsert.CommandType = System.Data.CommandType.StoredProcedure;
+                cmdInsert.CommandText = "InsertEmployee";
+                cmdInsert.Parameters.AddWithValue("@EmpNo", obj.EmpNo);
+                cmdInsert.Parameters.AddWithValue("@Name", obj.Name);
+                cmdInsert.Parameters.AddWithValue("@Basic", obj.Basic);
+                cmdInsert.Parameters.AddWithValue("@DeptNo", obj.DeptNo);
+                cmdInsert.ExecuteNonQuery();
+
+                Console.WriteLine("success");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally { cn.Close(); }
+        }
+        static void GetSingleValue()
+        {
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=YCPJan23;Integrated Security=True;";
+            try
+            {
+                cn.Open();
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = cn;
+                cmd.CommandType = System.Data.CommandType.Text;
+                //cmd.CommandText = "select Name from Employees where EmpNo=1";
+                //cmd.CommandText = "select count(*) from Employees ";
+                cmd.CommandText = "select * from Employees ";
+
+                object retval = cmd.ExecuteScalar();
+                Console.WriteLine(retval);
+
+                Console.WriteLine("success");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally { cn.Close(); }
+        }
+        static void DataReader1()
+        {
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=YCPJan23;Integrated Security=True;";
+            try
+            {
+                cn.Open();
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = cn;
+                cmd.CommandType = System.Data.CommandType.Text;
+                cmd.CommandText = "select * from Employees ";
+
+                SqlDataReader dr = cmd.ExecuteReader();
+                while (dr.Read())
+                {
+                    Console.WriteLine(dr[1]);
+                    Console.WriteLine(dr["Name"]);
+
+                    Console.WriteLine(dr.GetInt32(0));
+                    Console.WriteLine(dr.GetInt32("EmpNo"));
+
+                    //obj.EmpNo =(int) dr[0];
+                    //obj.EmpNo = (int)dr["EmpNo"];
+
+                    //obj.EmpNo = dr.GetInt32(0);
+                    //obj.EmpNo = dr.GetInt32("EmpNo");
+
+
+                    Console.WriteLine();
+                }
+
+                dr.Close();
+
+                Console.WriteLine("success");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally { cn.Close(); }
+        }
+
+        //NextResult
+        static void DataReader2()
+        {
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=YCPJan23;Integrated Security=True;";
+            try
+            {
+                cn.Open();
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = cn;
+                cmd.CommandType = System.Data.CommandType.Text;
+                cmd.CommandText = "select * from Employees;select * from departments";
+
+                SqlDataReader dr = cmd.ExecuteReader();
+                while (dr.Read())
+                {
+                    Console.WriteLine(dr[1]);
+                    Console.WriteLine(dr["Name"]);
+
+                    Console.WriteLine(dr.GetInt32(0));
+                    Console.WriteLine(dr.GetInt32("EmpNo"));
+
+                    //obj.EmpNo =(int) dr[0];
+                    //obj.EmpNo = (int)dr["EmpNo"];
+
+                    //obj.EmpNo = dr.GetInt32(0);
+                    //obj.EmpNo = dr.GetInt32("EmpNo");
+
+
+                    Console.WriteLine();
+                }
+                Console.WriteLine();
+                dr.NextResult(); //reads next set of records
+                while (dr.Read())
+                {
+                    Console.WriteLine(dr.GetString("DeptName"));
+                }
+
+
+                dr.Close();
+
+                Console.WriteLine("success");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally { cn.Close(); }
+        }
+
+        static void MARS()
+        {
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MsSqlLocalDb;Initial Catalog=ActsJan23;Integrated Security=true;MultipleActiveResultSets=true";
+            cn.Open();
+
+            SqlCommand cmdDepts = new SqlCommand();
+            cmdDepts.Connection = cn;
+            cmdDepts.CommandType = CommandType.Text;
+            cmdDepts.CommandText = "Select * from Departments";
+
+            SqlCommand cmdEmps = new SqlCommand();
+            cmdEmps.Connection = cn;
+            cmdEmps.CommandType = CommandType.Text;
+
+            SqlDataReader drDepts = cmdDepts.ExecuteReader();
+            while (drDepts.Read())
+            {
+                Console.WriteLine((drDepts["DeptName"]));
+
+                cmdEmps.CommandText = "Select * from Employees where DeptNo = " + drDepts["DeptNo"];
+                SqlDataReader drEmps = cmdEmps.ExecuteReader();
+                while (drEmps.Read())
+                {
+                    Console.WriteLine(("    " + drEmps["Name"]));
+                }
+                drEmps.Close();
+            }
+            drDepts.Close();
+            cn.Close();
+
+        }
+
+        static void CallFuncReturningSqlDataReader()
+        {
+            SqlDataReader dr = GetDataReader();
+            while (dr.Read())
+                Console.WriteLine(dr[1]);
+            
+            dr.Close();
+            //Console.WriteLine("connection is " + cn.State.ToString());
+        }
+        //static SqlConnection cn ;
+
+        static SqlDataReader GetDataReader()
+        {
+            SqlConnection cn = new SqlConnection();
+            //cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=ActsJan23;Integrated Security=True";
+            cn.Open();
+            SqlCommand cmdInsert = new SqlCommand();
+            cmdInsert.Connection = cn;
+            cmdInsert.CommandType = System.Data.CommandType.Text;
+            cmdInsert.CommandText = "select * from Employees ";
+            //SqlDataReader dr = cmdInsert.ExecuteReader();
+            SqlDataReader dr = cmdInsert.ExecuteReader(CommandBehavior.CloseConnection);
+            //cn.Close( );
+            return dr;
+        }
+
+        static void Transactions()
+        {
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=YCPJan23;Integrated Security=True";
+            cn.Open();
+            SqlTransaction t = cn.BeginTransaction();
+
+            SqlCommand cmdInsert = new SqlCommand();
+            cmdInsert.Connection = cn;
+            cmdInsert.Transaction = t;
+
+            cmdInsert.CommandType = System.Data.CommandType.Text;
+            cmdInsert.CommandText = "insert into Employees values(10, 'Shweta', 12345, 30)";
+
+            SqlCommand cmdInsert2 = new SqlCommand();
+            cmdInsert2.Connection = cn;
+            cmdInsert2.Transaction = t;
+
+            cmdInsert2.CommandType = System.Data.CommandType.Text;
+            cmdInsert2.CommandText = "insert into Employees values(20, 'Shweta', 12345, 30)";
+            try
+            {
+                cmdInsert.ExecuteNonQuery();
+                cmdInsert2.ExecuteNonQuery();
+                t.Commit();
+                Console.WriteLine("no errors- commit");
+            }
+            catch (Exception ex)
+            {
+                t.Rollback();
+                Console.WriteLine("Rollback");
+                Console.WriteLine(ex.Message);
+            }
+            cn.Close();
+
+        }
+
+        static void AsyncConnCode()
+        {
+            SqlConnection conn = new SqlConnection();
+            conn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=ActsJan23;Integrated Security=True";
+            Task t = conn.OpenAsync();
+            //do other code here
+
+            if (!t.IsCompleted)
+                t.Wait();
+            //code after conn is opened
+        }
+        static async void AsyncCommand()
+        {
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=ActsJan23;Integrated Security=True";
+
+            await cn.OpenAsync();  //async connection
+            try
+            {
+                SqlCommand cmdInsert = new SqlCommand();
+                cmdInsert.Connection = cn;
+                cmdInsert.CommandType = CommandType.Text;
+                cmdInsert.CommandText = "insert into Employees values(40,'Ganesh',10000,20)";
+
+                await cmdInsert.ExecuteNonQueryAsync();
+                //object o = await cmdInsert.ExecuteScalarAsync();
+
+                Console.WriteLine("okay");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            if (cn.State == ConnectionState.Open)
+                cn.Close();
+
+        }
+        static void AsyncCommand2()
+        {
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=ActsJan23;Integrated Security=True";
+
+            cn.Open();
+
+            SqlCommand cmdInsert = new SqlCommand();
+            cmdInsert.Connection = cn;
+            cmdInsert.CommandType = CommandType.Text;
+            cmdInsert.CommandText = "Select * from Employees";
+            //SqlDataReader dr = await cmdInsert.ExecuteReaderAsync();
+
+
+            cmdInsert.BeginExecuteReader(delegate (IAsyncResult ar)
+            {
+                SqlDataReader dr = cmdInsert.EndExecuteReader(ar);
+                while (dr.Read())
+                {
+                    Console.WriteLine(dr["Name"]);
+                    //Console.WriteLine(dr[1]);
+                }
+                dr.Close();
+                cn.Close();
+            }, null);
+
+            Console.WriteLine("code after begin....");
+
+
+            Console.ReadLine();
+        }
+        static void CallbackFunc(IAsyncResult ar)
+        {
+            //cmdInsert.End....
+        }
+    }
+
+
+
+    public class Employee
+    {
+        public int EmpNo { get; set; }
+        public string Name { get; set; }
+        public decimal Basic { get; set; }
+        public int DeptNo { get; set; }
+
+
+    }
+}
